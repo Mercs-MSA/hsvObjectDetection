@@ -1,20 +1,10 @@
 {
-  "USE_DUAL_COLOR_OBJECT": false,
-  "color_ranges": [
+  "color_range": [
     {
-      "hsv_min": [111, 53, 0],
-      "hsv_max": [250, 255, 220],
-      "sv_min": [0, 100, 100],
-      "sv_max": [255, 255, 255]
-    },
-    {
-      "hsv_min": [9, 160, 70],
-      "hsv_max": [25, 255, 255],
-      "sv_min": [0, 100, 100],
-      "sv_max": [255, 255, 255]
+      "hsv_min": [8, 180, 20],
+      "hsv_max": [20, 255, 240]
     }
   ],
-  "kernel_size": [2, 2],
-  "min_object_area": 1000,
-  "cube_width": 24
+  "kernel_size": [1, 1],
+  "min_object_area": 1000
 }

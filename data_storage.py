@@ -5,6 +5,7 @@ Auto-refreshing json setting storage
 import atexit
 import json
 import typing
+import logging
 
 import numpy as np
 from watchdog.events import FileSystemEventHandler
@@ -33,7 +34,7 @@ class MainDataStorage:
         self.kernel_size = [0, 0]
         self.min_object_area = 0
 
-        self.cube_width = 0
+        logging.info(f"Loaded storage class {self}")
 
 
 class CamDataStorage:
@@ -46,6 +47,8 @@ class CamDataStorage:
         self.cx = 0
         self.cy = 0
         self.dist = [0, 0, 0, 0, 0]
+
+        logging.info(f"Loaded storage class {self}")
 
 
 class MainSettingsHandler(FileSystemEventHandler):
@@ -91,24 +94,12 @@ def update_settings():
     settings, camera_calib = load_settings()
     print("Settings updated:", settings)
 
-    storage.use_dual_color_targets = settings["USE_DUAL_COLOR_OBJECT"]
-
     # HSV and SV range values for the first range
-    storage.hsv_min1 = np.array(settings["color_ranges"][0]["hsv_min"])
-    storage.hsv_max1 = np.array(settings["color_ranges"][0]["hsv_max"])
-    storage.sv_min1 = np.array(settings["color_ranges"][0]["sv_min"])
-    storage.sv_max1 = np.array(settings["color_ranges"][0]["sv_max"])
-
-    # HSV and SV range values for the second range
-    storage.hsv_min2 = np.array(settings["color_ranges"][1]["hsv_min"])
-    storage.hsv_max2 = np.array(settings["color_ranges"][1]["hsv_max"])
-    storage.sv_min2 = np.array(settings["color_ranges"][1]["sv_min"])
-    storage.sv_max2 = np.array(settings["color_ranges"][1]["sv_max"])
+    storage.hsv_min1 = np.array(settings["color_range"][0]["hsv_min"])
+    storage.hsv_max1 = np.array(settings["color_range"][0]["hsv_max"])
 
     storage.kernel_size = settings["kernel_size"]
     storage.min_object_area = settings["min_object_area"]
-
-    storage.cube_width = settings["cube_width"]
 
     cam_storage.fx = camera_calib["fx"]
     cam_storage.fy = camera_calib["fy"]
