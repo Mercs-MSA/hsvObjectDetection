@@ -8,6 +8,7 @@ import platform
 import traceback
 import pprint
 import sys
+import time
 
 import cv2
 from networktables import NetworkTables, NetworkTable
@@ -33,6 +34,9 @@ def _loop(nt: NetworkTable):
 
     pipeline = SingleColorPipeline(id="NoteDetect")
 
+    last_frame_timestamp = time.time()
+
+
     while True:
         try:
             ret, frame = cap.read()
@@ -51,6 +55,11 @@ def _loop(nt: NetworkTable):
             cv2.imshow("HSV Mask", mask)
 
             nt.putBoolean("vision_ok", True)
+
+            fps = 1 / (time.time() - last_frame_timestamp)
+            last_frame_timestamp = time.time()
+
+            nt.putNumber("fps", round(fps, 1))
 
             # Exit the loop when the 'q' key is pressed
             if cv2.waitKey(1) & 0xFF == ord('q'):
