@@ -3,7 +3,6 @@ FRC Off-Season Vision
 """
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
 
 import platform
 import traceback
@@ -11,7 +10,7 @@ import pprint
 import sys
 
 import cv2
-from networktables import NetworkTables
+from networktables import NetworkTables, NetworkTable
 
 from data_storage import cam_storage, storage
 from pipelines import SingleColorPipeline
@@ -21,12 +20,7 @@ from settings import CAMERA_ID
 __version__ = "0.1.0"
 
 
-if len(sys.argv) != 2:
-    print("Error: specify an IP to connect to!")
-    exit(0)
-
-
-def main():
+def _loop(nt: NetworkTable):
     """
     Main OpenCV Loop
     """
@@ -70,10 +64,17 @@ def main():
     cap.release()
     cv2.destroyAllWindows()
 
-
-if __name__ == "__main__":
-    ip = sys.argv[1]
+def init(ip):
     NetworkTables.initialize(server=ip)
     nt = NetworkTables.getTable("Vision")
     # nt.putString("version", __version__)
-    main()
+    _loop(nt)
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+    
+    if len(sys.argv) != 2:
+        print("Error: specify an IP to connect to!")
+        sys.exit(0)
+
+    init(sys.argv[1])
