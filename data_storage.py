@@ -26,8 +26,17 @@ class CamDataStorage:
 
 class PipeStorageProvider:
     def __init__(self, pipeline_id: str, default_data: dict) -> bool:
+        self.duplicate = False
+
+        for provider in storage_providers:
+            if provider.pipeline_id == pipeline_id:
+                logging.error(f"Multiple storage providers with the same id exist. {pipeline_id}")
+                self.duplicate = True
+                return
+
         storage_providers.append(self)
         self.default_data = default_data
+        self.pipeline_id = pipeline_id
         self.data = None
 
         os.makedirs(f"pipeline_storage/{pipeline_id}", exist_ok=True) # create storage for pipeline
@@ -35,12 +44,18 @@ class PipeStorageProvider:
 
         self.update()
 
+
     def update(self):
-        if (not os.path.exists(self.path)) or os.stat(self.path).st_size == 0:
-            with open(self.path, "w") as file:
-                file.write(json.dumps(self.default_data))
+        if not self.duplicate:
+            if (not os.path.exists(self.path)) or os.stat(self.path).st_size == 0:
+                with open(self.path, "w") as file:
+                    file.write(json.dumps(self.default_data))
+            
+            self.data = json.load(open(self.path, "r"))
+        else:
+            logging.critical(f"Couldn't save pipeline config. Another pipeline SotrageProvider exists with the same id.")
+            self.data = {}
         
-        self.data = json.load(open(self.path, "r"))
 
 
 class MainSettingsHandler(FileSystemEventHandler):
