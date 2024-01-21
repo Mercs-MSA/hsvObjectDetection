@@ -107,7 +107,7 @@ class SingleColorPipeline(NullPipeline):
             cv2.drawMarker(self.visual, c, (0, 255, 0))
 
             data["objects"].append({"bounding_box": cv2.boundingRect(cnt), "center": c, "perimeter": p, 
-                                    "area": a, "index": idx, "angle": angle})
+                                    "area": a, "index": idx, "yaw": angle})
 
         return True, in_frame, data
 
