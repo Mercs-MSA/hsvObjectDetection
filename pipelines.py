@@ -10,7 +10,7 @@ import numpy as np
 import math
 
 from utils import imfill
-from data_storage import MainDataStorage, CamDataStorage
+import data_storage
 
 
 def angle3pt(a, b, c):
@@ -24,6 +24,9 @@ class NullPipeline:
     """
     Blank Pipeline class
     """
+    def __init__(self):
+        self.default_data = {}
+
     def run():
         pass
 
@@ -35,11 +38,21 @@ class SingleColorPipeline(NullPipeline):
     """
     Pipeline for detecting single colored blobs
     """
-    def __init__(self, storage: MainDataStorage, cam_storage: CamDataStorage) -> None:
+    def __init__(self, id: str = "SingleColor") -> None:
+        self.default_data = \
+        {
+            "color_range": {
+                "hsv_min": [8, 180, 20],
+                "hsv_max": [20, 255, 240]
+            },
+            "kernel_size": [1, 1],
+            "min_object_area": 1000
+        }
+
         self.mask = None
         self.visual = None
-        self.storage = storage
-        self.cam_storage = cam_storage
+        self.id = id
+        self.storage = data_storage.PipeStorageProvider(id, self.default_data)
 
     def run(self, in_frame: cv2.typing.MatLike) -> typing.Union[bool, cv2.typing.MatLike, dict]:
         """Pipeline
@@ -59,11 +72,11 @@ class SingleColorPipeline(NullPipeline):
         hsv_frame = cv2.cvtColor(in_frame, cv2.COLOR_BGR2HSV)
 
         # Create HSV and SV masks using the specified ranges
-        self.mask = cv2.inRange(hsv_frame, self.storage.hsv_min1, self.storage.hsv_max1)
+        self.mask = cv2.inRange(hsv_frame, np.array(self.storage.data["color_range"]["hsv_min"]), np.array(self.storage.data["color_range"]["hsv_max"]))
 
         self.mask = imfill(self.mask)
 
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, self.storage.kernel_size)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, self.storage.data["kernel_size"])
 
         # Cone Morph
         thresh_cone = cv2.threshold(self.mask, 0, 255,
@@ -75,7 +88,7 @@ class SingleColorPipeline(NullPipeline):
 
         filtered_contours_cone = []
         for cnt in contours_cone:
-            if cv2.contourArea(cnt) > self.storage.min_object_area:
+            if cv2.contourArea(cnt) > self.storage.data["min_object_area"]:
                 filtered_contours_cone.append(cnt)
 
         for idx, cnt in enumerate(filtered_contours_cone):

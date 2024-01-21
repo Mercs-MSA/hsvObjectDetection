@@ -12,7 +12,7 @@ import sys
 import cv2
 from networktables import NetworkTables, NetworkTable
 
-from data_storage import cam_storage, storage
+from data_storage import cam_storage
 from pipelines import SingleColorPipeline
 from settings import CAMERA_ID
 
@@ -31,7 +31,7 @@ def _loop(nt: NetworkTable):
     else:
         cap = cv2.VideoCapture(CAMERA_ID) # linux just works
 
-    pipeline = SingleColorPipeline(storage, cam_storage)
+    pipeline = SingleColorPipeline(id="NoteDetect")
 
     while True:
         try:
@@ -72,7 +72,7 @@ def init(ip):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    
+
     if len(sys.argv) != 2:
         print("Error: specify an IP to connect to!")
         sys.exit(0)
