@@ -56,9 +56,44 @@ class PipeStorageProvider:
             
             self.data = json.load(open(self.path, "r"))
         else:
-            logging.critical(f"Couldn't save pipeline config. Another pipeline SotrageProvider exists with the same id.")
+            logging.critical(f"Couldn't update pipeline config. Another pipeline provider exists with the same id.")
             self.data = {}
         
+
+class ApplicationStorageProvider:
+    """
+    Storage provider for whole-app storage
+    """
+    def __init__(self, default_data: dict, app_id: str = "app") -> None:
+        self.duplicate = False
+
+        for provider in storage_providers:
+            if provider.pipeline_id == app_id:
+                logging.error(f"Multiple storage providers with the same id exist. {app_id}")
+                self.duplicate = True
+                return
+
+        storage_providers.append(self)
+        self.default_data = default_data
+        self.pipeline_id = app_id
+        self.data = None
+
+        os.makedirs(f"app_storage/{app_id}", exist_ok=True) # create storage
+        self.path = f"app_storage/{app_id}/storage.json"
+
+        self.update()
+
+
+    def update(self) -> None:
+        if not self.duplicate:
+            if (not os.path.exists(self.path)) or os.stat(self.path).st_size == 0:
+                with open(self.path, "w") as file:
+                    file.write(json.dumps(self.default_data))
+            
+            self.data = json.load(open(self.path, "r"))
+        else:
+            logging.critical(f"Couldn't update app config. Another provider exists with the same id.")
+            self.data = {}
 
 
 class MainSettingsHandler(FileSystemEventHandler):

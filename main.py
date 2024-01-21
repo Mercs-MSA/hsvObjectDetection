@@ -13,22 +13,22 @@ import time
 import cv2
 from networktables import NetworkTables, NetworkTable
 from pipelines import SingleColorPipeline
-from settings import CAMERA_ID
+import data_storage
 
 
 __version__ = "0.1.0"
 
 
-def _loop(nt: NetworkTable) -> None:
+def _loop(nt: NetworkTable, storage: data_storage.ApplicationStorageProvider) -> None:
     """
     Main OpenCV Loop
     """
 
     # Create a VideoCapture object to access the webcam
     if platform.system() == "Windows":
-        cap = cv2.VideoCapture(CAMERA_ID, cv2.CAP_DSHOW) # Use dshow to improve fps on windows
+        cap = cv2.VideoCapture(storage.data["camera_id"], cv2.CAP_DSHOW) # Use dshow to improve fps on windows
     else:
-        cap = cv2.VideoCapture(CAMERA_ID) # linux just works
+        cap = cv2.VideoCapture(storage.data["camera_id"]) # linux just works
 
     pipeline = SingleColorPipeline(id="NoteDetect")
 
@@ -72,13 +72,16 @@ def _loop(nt: NetworkTable) -> None:
     cv2.destroyAllWindows()
 
 def init(ip: str) -> None:
+    storage = data_storage.ApplicationStorageProvider({"camera_id": 0})
+
     NetworkTables.initialize(server=ip)
     nt = NetworkTables.getTable("Vision")
     # nt.putString("version", __version__)
-    _loop(nt)
+    _loop(nt, storage)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
+
 
     if len(sys.argv) != 2:
         print("Error: specify an IP to connect to!")
