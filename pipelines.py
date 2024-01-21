@@ -78,20 +78,20 @@ class SingleColorPipeline(NullPipeline):
 
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, self.storage.data["kernel_size"])
 
-        # Cone Morph
-        thresh_cone = cv2.threshold(self.mask, 0, 255,
+        # Morph
+        thresh = cv2.threshold(self.mask, 0, 255,
                                     cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
-        morph_cone = cv2.morphologyEx(thresh_cone, cv2.MORPH_CLOSE, kernel)
+        morph = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
 
         # Find contours in the combined masks
-        contours_cone, _ = cv2.findContours(morph_cone, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        contours, _ = cv2.findContours(morph, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
-        filtered_contours_cone = []
-        for cnt in contours_cone:
+        filtered_contours = []
+        for cnt in contours:
             if cv2.contourArea(cnt) > self.storage.data["min_object_area"]:
-                filtered_contours_cone.append(cnt)
+                filtered_contours.append(cnt)
 
-        for idx, cnt in enumerate(filtered_contours_cone):
+        for idx, cnt in enumerate(filtered_contours):
             p = cv2.arcLength(cnt, True)
             a = cv2.contourArea(cnt)
 

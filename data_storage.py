@@ -25,7 +25,10 @@ class CamDataStorage:
         logging.info(f"Loaded storage class {self}")
 
 class PipeStorageProvider:
-    def __init__(self, pipeline_id: str, default_data: dict) -> bool:
+    """
+    Storage provider for single-pipeline storage
+    """
+    def __init__(self, pipeline_id: str, default_data: dict) -> None:
         self.duplicate = False
 
         for provider in storage_providers:
@@ -45,7 +48,7 @@ class PipeStorageProvider:
         self.update()
 
 
-    def update(self):
+    def update(self) -> None:
         if not self.duplicate:
             if (not os.path.exists(self.path)) or os.stat(self.path).st_size == 0:
                 with open(self.path, "w") as file:
@@ -75,7 +78,6 @@ class MainSettingsHandler(FileSystemEventHandler):
 
 
 storage_providers: list[PipeStorageProvider] = []
-
 cam_storage = CamDataStorage()
 
 

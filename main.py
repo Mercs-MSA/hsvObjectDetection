@@ -12,8 +12,6 @@ import time
 
 import cv2
 from networktables import NetworkTables, NetworkTable
-
-from data_storage import cam_storage
 from pipelines import SingleColorPipeline
 from settings import CAMERA_ID
 
@@ -21,7 +19,7 @@ from settings import CAMERA_ID
 __version__ = "0.1.0"
 
 
-def _loop(nt: NetworkTable):
+def _loop(nt: NetworkTable) -> None:
     """
     Main OpenCV Loop
     """
@@ -73,7 +71,7 @@ def _loop(nt: NetworkTable):
     cap.release()
     cv2.destroyAllWindows()
 
-def init(ip):
+def init(ip: str) -> None:
     NetworkTables.initialize(server=ip)
     nt = NetworkTables.getTable("Vision")
     # nt.putString("version", __version__)
