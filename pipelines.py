@@ -7,17 +7,9 @@ import typing
 import cv2
 import cv2.typing
 import numpy as np
-import math
 
-from utils import imfill
+from utils import imfill, angle3pt
 import data_storage
-
-
-def angle3pt(a, b, c):
-    """Counterclockwise angle in degrees by turning from a to c around b
-        Returns a float between 0.0 and 360.0"""
-    ang = math.degrees(math.atan2(c[1]-b[1], c[0]-b[0]) - math.atan2(a[1]-b[1], a[0]-b[0]))
-    return ang
 
 
 class NullPipeline:
@@ -27,18 +19,25 @@ class NullPipeline:
     def __init__(self):
         self.default_data = {}
 
-    def run():
-        pass
+    def run(self, in_frame: cv2.typing.MatLike):
+        """Run a blank OpenCv Pipeline
 
-    def get_debug_mats():
-        pass
+        Args:
+            in_frame (cv2.typing.MatLike): Input from camera or image source
+        """
+
+    def get_debug_mats(self):
+        """
+        Retrieve debug data from OpenCv pipeline (placeholder)
+        """
 
 
 class SingleColorPipeline(NullPipeline):
     """
     Pipeline for detecting single colored blobs
     """
-    def __init__(self, id: str = "SingleColor") -> None:
+    def __init__(self, pipe_id: str = "SingleColor") -> None:
+        super(SingleColorPipeline, self).__init__()
         self.default_data = \
         {
             "color_range": {
@@ -51,8 +50,8 @@ class SingleColorPipeline(NullPipeline):
 
         self.mask = None
         self.visual = None
-        self.id = id
-        self.storage = data_storage.PipeStorageProvider(id, self.default_data)
+        self.id = pipe_id
+        self.storage = data_storage.PipeStorageProvider(pipe_id, self.default_data)
 
     def run(self, in_frame: cv2.typing.MatLike) -> typing.Union[bool, cv2.typing.MatLike, dict]:
         """Pipeline
@@ -72,7 +71,8 @@ class SingleColorPipeline(NullPipeline):
         hsv_frame = cv2.cvtColor(in_frame, cv2.COLOR_BGR2HSV)
 
         # Create HSV and SV masks using the specified ranges
-        self.mask = cv2.inRange(hsv_frame, np.array(self.storage.data["color_range"]["hsv_min"]), np.array(self.storage.data["color_range"]["hsv_max"]))
+        self.mask = cv2.inRange(hsv_frame, np.array(self.storage.data["color_range"]["hsv_min"]),
+                                np.array(self.storage.data["color_range"]["hsv_max"]))
 
         self.mask = imfill(self.mask)
 
@@ -99,14 +99,16 @@ class SingleColorPipeline(NullPipeline):
 
             x, y, w, h = cv2.boundingRect(cnt)
             c = (x + w // 2, y + h // 2)
-            angle = angle3pt(c, (self.mask.shape[1] // 2, self.mask.shape[0]), (self.mask.shape[1] // 2, self.mask.shape[0] - 1))
+            angle = angle3pt(c, (self.mask.shape[1] // 2, self.mask.shape[0]),
+                             (self.mask.shape[1] // 2, self.mask.shape[0] - 1))
 
             cv2.putText(self.visual, f"T{idx}", (x, y - 5),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
             cv2.rectangle(self.visual, (x, y), (x + w, y + h), (0, 0, 255), 2)
             cv2.drawMarker(self.visual, c, (0, 255, 0))
 
-            data["objects"].append({"bounding_box": cv2.boundingRect(cnt), "center": c, "perimeter": p, 
+            data["objects"].append({"bounding_box": cv2.boundingRect(cnt),
+                                    "center": c, "perimeter": p,
                                     "area": a, "index": idx, "yaw": angle})
 
         return True, in_frame, data

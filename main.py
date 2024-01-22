@@ -1,5 +1,5 @@
 """
-FRC Off-Season Vision
+FRC 6369 Vision
 """
 
 import logging
@@ -7,7 +7,6 @@ import logging
 import platform
 import traceback
 import pprint
-import sys
 import time
 
 import cv2
@@ -26,11 +25,12 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
 
     # Create a VideoCapture object to access the webcam
     if platform.system() == "Windows":
-        cap = cv2.VideoCapture(storage.data["camera_id"], cv2.CAP_DSHOW) # Use dshow to improve fps on windows
+        cap = cv2.VideoCapture(storage.data["camera_id"],
+                               cv2.CAP_DSHOW) # Use dshow to improve fps on windows
     else:
         cap = cv2.VideoCapture(storage.data["camera_id"]) # linux just works
 
-    pipeline = SingleColorPipeline(id="NoteDetect")
+    pipeline = SingleColorPipeline(pipe_id="NoteDetect")
 
     last_frame_timestamp = time.time()
 
@@ -70,8 +70,12 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
     cap.release()
     cv2.destroyAllWindows()
 
-def init(ip: str) -> None:
-    storage = data_storage.ApplicationStorageProvider({"camera_id": 0, "nt_version": 4, "nt_address": "localhost"})
+def init() -> None:
+    """
+    Initialize pipeline processing
+    """
+    storage = data_storage.ApplicationStorageProvider({"camera_id": 0, "nt_version": 4,
+                                                       "nt_address": "localhost"})
 
     inst = ntcore.NetworkTableInstance.getDefault()
     inst.setServer(storage.data["nt_address"])
@@ -86,9 +90,9 @@ def init(ip: str) -> None:
 
     nt = inst.getTable("Vision")
     nt.putString("version", __version__)
-    
+
     _loop(nt, storage)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    init(sys.argv[1])
+    init()

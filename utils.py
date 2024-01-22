@@ -2,6 +2,8 @@
 OpenCV Utilities
 """
 
+import math
+
 import cv2
 import cv2.typing
 import numpy as np
@@ -27,3 +29,10 @@ def imfill(input_mask: cv2.typing.MatLike):
     cv2.drawContours(filled_mask, contours, -1, 255, thickness=cv2.FILLED)
 
     return filled_mask
+
+
+def angle3pt(a, b, c):
+    """Counterclockwise angle in degrees by turning from a to c around b
+        Returns a float between 0.0 and 360.0"""
+    ang = math.degrees(math.atan2(c[1]-b[1], c[0]-b[0]) - math.atan2(a[1]-b[1], a[0]-b[0]))
+    return ang

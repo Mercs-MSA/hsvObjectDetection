@@ -49,16 +49,19 @@ class PipeStorageProvider:
 
 
     def update(self) -> None:
+        """Refresh data
+        """
         if not self.duplicate:
             if (not os.path.exists(self.path)) or os.stat(self.path).st_size == 0:
-                with open(self.path, "w") as file:
+                with open(self.path, "w", encoding="utf-8") as file:
                     file.write(json.dumps(self.default_data, indent=4))
-            
-            self.data = json.load(open(self.path, "r"))
+
+            self.data = json.load(open(self.path, "r", encoding="utf-8"))
         else:
-            logging.critical("Couldn't update pipeline config. Another pipeline provider exists with the same id.")
+            logging.critical("Couldn't update pipeline config. \
+                             Another pipeline provider exists with the same id.")
             self.data = {}
-        
+
 
 class ApplicationStorageProvider:
     """
@@ -85,14 +88,17 @@ class ApplicationStorageProvider:
 
 
     def update(self) -> None:
+        """Refresh data
+        """
         if not self.duplicate:
             if (not os.path.exists(self.path)) or os.stat(self.path).st_size == 0:
-                with open(self.path, "w") as file:
+                with open(self.path, "w", encoding="utf-8") as file:
                     file.write(json.dumps(self.default_data, indent=4))
-            
-            self.data = json.load(open(self.path, "r"))
+
+            self.data = json.load(open(self.path, "r", encoding="utf-8"))
         else:
-            logging.critical("Couldn't update app config. Another provider exists with the same id.")
+            logging.critical("Couldn't update app config. \
+                             Another provider exists with the same id.")
             self.data = {}
 
 
