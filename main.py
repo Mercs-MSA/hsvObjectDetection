@@ -19,7 +19,7 @@ import data_storage
 __version__ = "0.1.0"
 
 
-def _loop(inst, nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvider) -> None:
+def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvider) -> None:
     """
     Main OpenCV Loop
     """
@@ -33,7 +33,6 @@ def _loop(inst, nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorag
     pipeline = SingleColorPipeline(id="NoteDetect")
 
     last_frame_timestamp = time.time()
-
 
     while True:
         try:
@@ -58,7 +57,6 @@ def _loop(inst, nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorag
             last_frame_timestamp = time.time()
 
             nt.putNumber("fps", round(fps, 1))
-            print(inst.isConnected())
 
             # Exit the loop when the 'q' key is pressed
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -73,10 +71,10 @@ def _loop(inst, nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorag
     cv2.destroyAllWindows()
 
 def init(ip: str) -> None:
-    storage = data_storage.ApplicationStorageProvider({"camera_id": 0, "nt_version": 4})
+    storage = data_storage.ApplicationStorageProvider({"camera_id": 0, "nt_version": 4, "nt_address": "localhost"})
 
     inst = ntcore.NetworkTableInstance.getDefault()
-    inst.setServer("localhost")
+    inst.setServer(storage.data["nt_address"])
     client_version = storage.data["nt_version"]
     if client_version == 3:
         inst.startClient3("vision")
@@ -87,16 +85,10 @@ def init(ip: str) -> None:
         inst.startClient4("vision")
 
     nt = inst.getTable("Vision")
-
-    # nt.putString("version", __version__)
-    _loop(inst, nt, storage)
+    nt.putString("version", __version__)
+    
+    _loop(nt, storage)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-
-
-    if len(sys.argv) != 2:
-        print("Error: specify an IP to connect to!")
-        sys.exit(0)
-
     init(sys.argv[1])
