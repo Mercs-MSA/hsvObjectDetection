@@ -11,7 +11,7 @@ import sys
 import time
 
 import cv2
-from networktables import NetworkTables, NetworkTable
+import ntcore
 from pipelines import SingleColorPipeline
 import data_storage
 
@@ -19,7 +19,7 @@ import data_storage
 __version__ = "0.1.0"
 
 
-def _loop(nt: NetworkTable, storage: data_storage.ApplicationStorageProvider) -> None:
+def _loop(inst, nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvider) -> None:
     """
     Main OpenCV Loop
     """
@@ -58,6 +58,7 @@ def _loop(nt: NetworkTable, storage: data_storage.ApplicationStorageProvider) ->
             last_frame_timestamp = time.time()
 
             nt.putNumber("fps", round(fps, 1))
+            print(inst.isConnected())
 
             # Exit the loop when the 'q' key is pressed
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -72,12 +73,23 @@ def _loop(nt: NetworkTable, storage: data_storage.ApplicationStorageProvider) ->
     cv2.destroyAllWindows()
 
 def init(ip: str) -> None:
-    storage = data_storage.ApplicationStorageProvider({"camera_id": 0})
+    storage = data_storage.ApplicationStorageProvider({"camera_id": 0, "nt_version": 4})
 
-    NetworkTables.initialize(server=ip)
-    nt = NetworkTables.getTable("Vision")
+    inst = ntcore.NetworkTableInstance.getDefault()
+    inst.setServer("localhost")
+    client_version = storage.data["nt_version"]
+    if client_version == 3:
+        inst.startClient3("vision")
+    elif client_version == 4:
+        inst.startClient4("vision")
+    else:
+        logging.warning("Client version must either be 3 or 4. Defaulting to v4")
+        inst.startClient4("vision")
+
+    nt = inst.getTable("Vision")
+
     # nt.putString("version", __version__)
-    _loop(nt, storage)
+    _loop(inst, nt, storage)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
