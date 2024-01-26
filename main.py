@@ -8,6 +8,7 @@ import platform
 import traceback
 import pprint
 import time
+import json
 
 import cv2
 import ntcore
@@ -46,7 +47,7 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
             visual, mask = pipeline.get_debug_mats()
 
             pprint.pprint(data)
-            nt.putString("note_pipeline", str(data))
+            nt.putString("note_pipeline", json.dumps(data))
 
             cv2.imshow("Original with Rectangles", visual)
             cv2.imshow("HSV Mask", mask)

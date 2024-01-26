@@ -65,7 +65,7 @@ class SingleColorPipeline(NullPipeline):
             dict: Pos Data
         """
         self.visual = in_frame.copy()
-        data = {"objects": []}
+        data = {"objects": [], "best": None}
 
         # Convert the frame to HSV color space
         hsv_frame = cv2.cvtColor(in_frame, cv2.COLOR_BGR2HSV)
@@ -110,6 +110,8 @@ class SingleColorPipeline(NullPipeline):
             data["objects"].append({"bounding_box": cv2.boundingRect(cnt),
                                     "center": c, "perimeter": p,
                                     "area": a, "index": idx, "yaw": angle})
+
+        data["best"] = max(data["objects"], key=lambda x: x["area"], default=None)
 
         return True, in_frame, data
 
