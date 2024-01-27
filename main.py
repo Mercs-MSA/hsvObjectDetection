@@ -31,6 +31,9 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
     else:
         cap = cv2.VideoCapture(storage.data["camera_id"]) # linux just works
 
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, storage.data["camera_resolution"][0])
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, storage.data["camera_resolution"][1])
+
     pipeline = SingleColorPipeline(pipe_id="NoteDetect")
 
     last_frame_timestamp = time.time()
@@ -75,7 +78,7 @@ def init() -> None:
     """
     Initialize pipeline processing
     """
-    storage = data_storage.ApplicationStorageProvider({"camera_id": 0, "nt_version": 4,
+    storage = data_storage.ApplicationStorageProvider({"camera_id": 0, "camera_resolution": [1280, 720], "nt_version": 4,
                                                        "nt_address": "localhost"})
 
     inst = ntcore.NetworkTableInstance.getDefault()
