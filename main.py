@@ -34,6 +34,9 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, storage.data["camera_resolution"][0])
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, storage.data["camera_resolution"][1])
 
+    if storage.data["camera_exp"]:
+        cap.set(cv2.CAP_PROP_EXPOSURE, storage.data["camera_exp"])
+
     pipeline = SingleColorPipeline(pipe_id="NoteDetect")
 
     last_frame_timestamp = time.time()
@@ -78,7 +81,9 @@ def init() -> None:
     """
     Initialize pipeline processing
     """
-    storage = data_storage.ApplicationStorageProvider({"camera_id": 0, "camera_resolution": [1280, 720], "nt_version": 4,
+    storage = data_storage.ApplicationStorageProvider({"camera_id": 0,
+                                                       "camera_resolution": [1280, 720],
+                                                       "camera_exp": None, "nt_version": 4,
                                                        "nt_address": "localhost"})
 
     inst = ntcore.NetworkTableInstance.getDefault()

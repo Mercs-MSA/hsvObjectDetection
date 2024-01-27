@@ -1,5 +1,7 @@
 {
     "camera_id": 0,
+    "camera_resolution": [1280, 720],
+    "camera_exp": null,
     "nt_version": 4,
     "nt_address": "localhost"
 }
