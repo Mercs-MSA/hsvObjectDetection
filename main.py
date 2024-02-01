@@ -12,7 +12,7 @@ import json
 
 import cv2
 import ntcore
-from pipelines import SingleColorPipeline
+from pipelines import PyCoralPipeline
 import data_storage
 
 
@@ -37,7 +37,7 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
     if storage.data["camera_exp"]:
         cap.set(cv2.CAP_PROP_EXPOSURE, storage.data["camera_exp"])
 
-    pipeline = SingleColorPipeline(pipe_id="NoteDetect")
+    pipeline = PyCoralPipeline(pipe_id="NoteDetect")
 
     last_frame_timestamp = time.time()
 
@@ -50,13 +50,12 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
                 continue
 
             _, frame, data = pipeline.run(frame)
-            visual, mask = pipeline.get_debug_mats()
+            visual = pipeline.get_debug_mats()
 
             pprint.pprint(data)
             nt.putString("note_pipeline", json.dumps(data))
 
             cv2.imshow("Original with Rectangles", visual)
-            cv2.imshow("HSV Mask", mask)
 
             nt.putBoolean("vision_ok", True)
 
