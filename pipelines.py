@@ -201,7 +201,8 @@ class PyCoralPipeline(NullPipeline):
 
             data["objects"].append({"bounding_box": (x, y, w, h),
                                     "center": c, "perimeter": p,
-                                    "area": a, "index": idx, "yaw": angle})
+                                    "area": a, "index": idx, "yaw": angle,
+                                    "accuracy": obj.score})
 
         data["best"] = max(data["objects"], key=lambda x: x["area"], default=None)
 
