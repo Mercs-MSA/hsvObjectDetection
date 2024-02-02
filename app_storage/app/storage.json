@@ -4,5 +4,8 @@
     "camera_exp": null,
     "nt_version": 4,
     "nt_address": "10.63.69.2",
-    "require_root": true
+    "require_root": true,
+    "post_load_actions": [
+        {"type": "start_service", "data": {"service_name": "photonvision.service"}}
+    ]
 }

@@ -41,6 +41,18 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
 
     pipeline = PyCoralPipeline(pipe_id="NoteDetect")
 
+    if "post_load_actions" in storage.data:
+        for action in storage.data["post_load_actions"]:
+            if action["type"] == "start_service":
+                try:
+                    import dbus
+                    sysbus = dbus.SystemBus()
+                    systemd1 = sysbus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+                    manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+                    job = manager.StartUnit(action["data"]["service_name"], 'fail')     
+                except ImportError:
+                    logging.error("Could not start service %s because dbus-python is not installed", action["data"]["service_name"])
+
     last_frame_timestamp = time.time()
 
     while True:
@@ -85,7 +97,8 @@ def init() -> None:
     storage = data_storage.ApplicationStorageProvider({"camera_id": 0,
                                                        "camera_resolution": [1280, 720],
                                                        "camera_exp": None, "nt_version": 4,
-                                                       "nt_address": "localhost", "require_root" : False})
+                                                       "nt_address": "localhost", "require_root" : False,
+                                                       "post_load_actions": []})
     
     if storage.data["require_root"]:
         try:
