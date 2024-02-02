@@ -40,4 +40,7 @@ def angle3pt(a, b, c):
 
 
 def is_root():
+    """
+    Return True is code is running as root
+    """
     return os.getuid() == 0

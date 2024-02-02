@@ -9,7 +9,7 @@ import cv2
 import cv2.typing
 import numpy as np
 
-from PIL import Image, ImageDraw
+from PIL import Image
 from pycoral.adapters import common
 from pycoral.adapters import detect
 from pycoral.utils.dataset import read_label_file
@@ -175,8 +175,8 @@ class PyCoralPipeline(NullPipeline):
         self.interpreter.invoke()
         inference_time = time.perf_counter() - start
         objs = detect.get_objects(self.interpreter, self.storage.data["min_threshold"], scale)
-        print('%.2f ms' % (inference_time * 1000))
-        
+        print(f'{inference_time * 1000} ms')
+
 
         filtered_contours: list[PyCObject] = []
         for obj in objs:

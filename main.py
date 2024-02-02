@@ -52,12 +52,14 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
                 try:
                     import dbus
                     sysbus = dbus.SystemBus()
-                    systemd1 = sysbus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+                    systemd1 = sysbus.get_object('org.freedesktop.systemd1',
+                                                 '/org/freedesktop/systemd1')
                     manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
                     manager.StartUnit(action["data"]["service_name"], 'fail')
                     logger.info("Started %s via systemd", action["data"]["service_name"])
                 except ImportError:
-                    logger.error("Could not start service %s because dbus-python is not installed", action["data"]["service_name"])
+                    logger.error("Could not start service %s because dbus-python is not installed",
+                                 action["data"]["service_name"])
 
     last_frame_timestamp = time.time()
 
@@ -89,7 +91,7 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
                 break
         except Exception as e:
             traceback.print_exc()
-            logger.error(f"Traceback during pipeline update {e}")
+            logger.error("Traceback during pipeline update %s", e)
             nt.putBoolean("vision_ok", False)
 
     # Release the VideoCapture and close all OpenCV windows
@@ -103,9 +105,11 @@ def init() -> None:
     storage = data_storage.ApplicationStorageProvider({"camera_id": 0,
                                                        "camera_resolution": [1280, 720],
                                                        "camera_exp": None, "nt_version": 4,
-                                                       "nt_address": "localhost", "require_root" : False,
-                                                       "post_load_actions": [], "atexit_actions": []})
-    
+                                                       "nt_address": "localhost", 
+                                                       "require_root" : False,
+                                                       "post_load_actions": [],
+                                                       "atexit_actions": []})
+
     if storage.data["require_root"]:
         try:
             if not is_root():
@@ -122,12 +126,16 @@ def init() -> None:
                 try:
                     import dbus
                     sysbus = dbus.SystemBus()
-                    systemd1 = sysbus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+                    systemd1 = sysbus.get_object('org.freedesktop.systemd1',
+                                                 '/org/freedesktop/systemd1')
                     manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
-                    atexit.register(functools.partial(manager.StopUnit, action["data"]["service_name"], 'fail'))
+                    atexit.register(functools.partial(manager.StopUnit,
+                                                      action["data"]["service_name"], 'fail'))
                     logger.info("Registered stop %s via systemd", action["data"]["service_name"])
                 except ImportError:
-                    logger.error("Could not register stop service %s because dbus-python is not installed", action["data"]["service_name"])
+                    logger.error("Could not register stop service %s \
+                                 because dbus-python is not installed",
+                                 action["data"]["service_name"])
 
     inst = ntcore.NetworkTableInstance.getDefault()
     inst.setServer(storage.data["nt_address"])
