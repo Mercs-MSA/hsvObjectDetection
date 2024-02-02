@@ -9,11 +9,13 @@ import traceback
 import pprint
 import time
 import json
+import sys
 
 import cv2
 import ntcore
 from pipelines import PyCoralPipeline
 import data_storage
+from utils import is_root
 
 
 __version__ = "0.1.0"
@@ -83,7 +85,17 @@ def init() -> None:
     storage = data_storage.ApplicationStorageProvider({"camera_id": 0,
                                                        "camera_resolution": [1280, 720],
                                                        "camera_exp": None, "nt_version": 4,
-                                                       "nt_address": "localhost"})
+                                                       "nt_address": "localhost", "require_root" : False})
+    
+    if storage.data["require_root"]:
+        try:
+            if not is_root():
+                import elevate
+                print("Program is being elevated")
+                elevate.elevate(graphical=False)
+        except ImportError:
+            logging.critical("Root access requested, but elevate is not installed. Exiting")
+            sys.exit(0)
 
     inst = ntcore.NetworkTableInstance.getDefault()
     inst.setServer(storage.data["nt_address"])

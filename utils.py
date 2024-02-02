@@ -3,6 +3,7 @@ OpenCV Utilities
 """
 
 import math
+import os
 
 import cv2
 import cv2.typing
@@ -36,3 +37,7 @@ def angle3pt(a, b, c):
         Returns a float between 0.0 and 360.0"""
     ang = math.degrees(math.atan2(c[1]-b[1], c[0]-b[0]) - math.atan2(a[1]-b[1], a[0]-b[0]))
     return ang
+
+
+def is_root():
+    return os.getuid() == 0
