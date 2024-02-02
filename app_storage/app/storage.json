@@ -1,5 +1,5 @@
 {
-    "camera_id": 0,
+    "camera_id": "/dev/video-back-port2",
     "camera_resolution": [640, 480],
     "camera_exp": null,
     "nt_version": 4,
