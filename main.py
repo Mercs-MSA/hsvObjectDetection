@@ -49,7 +49,8 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
                     sysbus = dbus.SystemBus()
                     systemd1 = sysbus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
                     manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
-                    job = manager.StartUnit(action["data"]["service_name"], 'fail')     
+                    job = manager.StartUnit(action["data"]["service_name"], 'fail')
+                    logging.info("Started %s via systemd", action["data"]["service_name"])
                 except ImportError:
                     logging.error("Could not start service %s because dbus-python is not installed", action["data"]["service_name"])
 
