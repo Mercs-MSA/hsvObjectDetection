@@ -81,8 +81,6 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
             pprint.pprint(data)
             nt.putString("note_pipeline", json.dumps(data))
 
-            cv2.imshow("Original with Rectangles", visual)
-
             nt.putBoolean("vision_ok", True)
 
             fps = 1 / (time.time() - last_frame_timestamp)
@@ -90,9 +88,12 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
 
             nt.putNumber("fps", round(fps, 1))
 
-            # Exit the loop when the 'q' key is pressed
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            if storage.data["gui"]:
+                cv2.imshow("Original with Rectangles", visual)
+
+                # Exit the loop when the 'q' key is pressed
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
         except Exception as e:
             traceback.print_exc()
             logger.error("Traceback during pipeline update %s", e)
@@ -112,7 +113,7 @@ def init() -> None:
                                                        "nt_address": "localhost", 
                                                        "require_root" : False,
                                                        "post_load_actions": [],
-                                                       "atexit_actions": []})
+                                                       "atexit_actions": [], "gui": False})
 
     if storage.data["require_root"]:
         try:

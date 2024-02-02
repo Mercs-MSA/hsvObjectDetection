@@ -10,5 +10,6 @@
     ],
     "atexit_actions": [
         {"type": "stop_service", "data": {"service_name": "photonvision.service"}}
-    ]
+    ],
+    "gui": false
 }
