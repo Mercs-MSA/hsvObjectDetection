@@ -10,6 +10,8 @@ import pprint
 import time
 import json
 import sys
+import atexit
+import functools
 
 import cv2
 import ntcore
@@ -20,6 +22,9 @@ from utils import is_root
 
 __version__ = "0.1.0"
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("vision")
+logger.setLevel(logging.DEBUG)
 
 def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvider) -> None:
     """
@@ -49,10 +54,10 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
                     sysbus = dbus.SystemBus()
                     systemd1 = sysbus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
                     manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
-                    job = manager.StartUnit(action["data"]["service_name"], 'fail')
-                    logging.info("Started %s via systemd", action["data"]["service_name"])
+                    manager.StartUnit(action["data"]["service_name"], 'fail')
+                    logger.info("Started %s via systemd", action["data"]["service_name"])
                 except ImportError:
-                    logging.error("Could not start service %s because dbus-python is not installed", action["data"]["service_name"])
+                    logger.error("Could not start service %s because dbus-python is not installed", action["data"]["service_name"])
 
     last_frame_timestamp = time.time()
 
@@ -61,7 +66,7 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
             ret, frame = cap.read()
 
             if not ret:
-                logging.error("Failed to capture video from the webcam")
+                logger.error("Failed to capture video from the webcam")
                 continue
 
             _, frame, data = pipeline.run(frame)
@@ -84,7 +89,7 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
                 break
         except Exception as e:
             traceback.print_exc()
-            logging.error(f"Traceback during pipeline update {e}")
+            logger.error(f"Traceback during pipeline update {e}")
             nt.putBoolean("vision_ok", False)
 
     # Release the VideoCapture and close all OpenCV windows
@@ -99,7 +104,7 @@ def init() -> None:
                                                        "camera_resolution": [1280, 720],
                                                        "camera_exp": None, "nt_version": 4,
                                                        "nt_address": "localhost", "require_root" : False,
-                                                       "post_load_actions": []})
+                                                       "post_load_actions": [], "atexit_actions": []})
     
     if storage.data["require_root"]:
         try:
@@ -108,8 +113,21 @@ def init() -> None:
                 print("Program is being elevated")
                 elevate.elevate(graphical=False)
         except ImportError:
-            logging.critical("Root access requested, but elevate is not installed. Exiting")
+            logger.critical("Root access requested, but elevate is not installed. Exiting")
             sys.exit(0)
+
+    if "atexit_actions" in storage.data:
+        for action in storage.data["atexit_actions"]:
+            if action["type"] == "stop_service":
+                try:
+                    import dbus
+                    sysbus = dbus.SystemBus()
+                    systemd1 = sysbus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+                    manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+                    atexit.register(functools.partial(manager.StopUnit, action["data"]["service_name"], 'fail'))
+                    logger.info("Registered stop %s via systemd", action["data"]["service_name"])
+                except ImportError:
+                    logger.error("Could not register stop service %s because dbus-python is not installed", action["data"]["service_name"])
 
     inst = ntcore.NetworkTableInstance.getDefault()
     inst.setServer(storage.data["nt_address"])
@@ -119,7 +137,7 @@ def init() -> None:
     elif client_version == 4:
         inst.startClient4("vision")
     else:
-        logging.warning("Client version must either be 3 or 4. Defaulting to v4")
+        logger.warning("Client version must either be 3 or 4. Defaulting to v4")
         inst.startClient4("vision")
 
     nt = inst.getTable("Vision")
@@ -128,5 +146,4 @@ def init() -> None:
     _loop(nt, storage)
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
     init()
