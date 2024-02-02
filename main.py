@@ -61,8 +61,8 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
                     logger.error("Could not start service %s because dbus-python is not installed",
                                  action["data"]["service_name"])
                 except dbus.DBusException:
-                    logger.error("Could not start service %s . \
-                                 Another operation is running related to the service",
+                    logger.error("Could not start service %s. "
+                                 "Another operation is running related to the service",
                                  action["data"]["service_name"])
 
     last_frame_timestamp = time.time()
