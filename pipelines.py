@@ -131,6 +131,27 @@ class SingleColorPipeline(NullPipeline):
         return self.visual, self.mask
 
 
+class PyCoralObjectReturn(typing.TypedDict):
+    """
+    Dict return type for single PyCoralPipeline object
+    """
+    bounding_box: tuple[int, int, int, int]
+    center: float
+    perimeter: int
+    area: int
+    index: int
+    yaw: float
+    accuracy: float
+
+
+class PyCoralPipeReturnData(typing.TypedDict):
+    """
+    Dict return type for PyCoralPipeline
+    """
+    best: typing.Union[PyCoralObjectReturn, dict[None]]
+    objects: list[PyCoralObjectReturn]
+
+
 class PyCoralPipeline(NullPipeline):
     """
     Pipeline for detecting single colored blobs
@@ -153,7 +174,7 @@ class PyCoralPipeline(NullPipeline):
         self.interpreter = make_interpreter(self.storage.data["model"])
         self.interpreter.allocate_tensors()
 
-    def run(self, in_frame: cv2.typing.MatLike) -> typing.Union[bool, cv2.typing.MatLike, dict]:
+    def run(self, in_frame: cv2.typing.MatLike) -> typing.Tuple[bool, cv2.typing.MatLike, PyCoralPipeReturnData]:
         """Pipeline
 
         Args:
@@ -165,7 +186,8 @@ class PyCoralPipeline(NullPipeline):
             dict: Pos Data
         """
         self.visual = in_frame.copy()
-        data = {"objects": [], "best": None}
+
+        data: PyCoralPipeReturnData = {"objects": [], "best": {}}
 
         image = Image.fromarray(cv2.cvtColor(in_frame, cv2.COLOR_BGR2RGB))
         _, scale = common.set_resized_input(
@@ -175,7 +197,6 @@ class PyCoralPipeline(NullPipeline):
         self.interpreter.invoke()
         inference_time = time.perf_counter() - start
         objs = detect.get_objects(self.interpreter, self.storage.data["min_threshold"], scale)
-        print(f'{inference_time * 1000} ms')
 
 
         filtered_contours: list[PyCObject] = []
@@ -203,6 +224,9 @@ class PyCoralPipeline(NullPipeline):
                                     "center": c, "perimeter": p,
                                     "area": a, "index": idx, "yaw": angle,
                                     "accuracy": obj.score})
+
+        cv2.putText(self.visual, f"{1 / (inference_time * 1000) * 1000:.1f} FPS",
+                    (35, 35), cv2.FONT_HERSHEY_SIMPLEX, 1.25, (0, 255, 0))
 
         data["best"] = max(data["objects"], key=lambda x: x["area"], default=None)
 
