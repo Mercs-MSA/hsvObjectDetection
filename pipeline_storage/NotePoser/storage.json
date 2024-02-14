@@ -1,0 +1,7 @@
+{
+    "model": "edgetpu.tflite",
+    "labels": "labels.txt",
+    "min_object_area": 1000,
+    "min_threshold": 0.5,
+    "note_width": 14
+}

@@ -14,7 +14,7 @@ import functools
 
 import cv2
 import ntcore
-from pipelines import PyCoralPipeline
+from pipelines import PyCoralPosePipeline
 import data_storage
 from utils import is_root
 
@@ -43,7 +43,7 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
     if storage.data["camera_exp"]:
         cap.set(cv2.CAP_PROP_EXPOSURE, storage.data["camera_exp"])
 
-    pipeline = PyCoralPipeline(pipe_id="NoteDetect")
+    pipeline = PyCoralPosePipeline(storage, pipe_id="NotePoser")
 
     if "post_load_actions" in storage.data:
         for action in storage.data["post_load_actions"]:

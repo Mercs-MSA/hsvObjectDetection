@@ -237,3 +237,120 @@ class PyCoralPipeline(NullPipeline):
         Return OpenCV Images for debugging
         """
         return self.visual
+
+
+class PyCoralPoseObjectReturn(typing.TypedDict):
+    """
+    Dict return type for single PyCoralPosePipeline object
+    """
+    bounding_box: tuple[int, int, int, int]
+    center: float
+    perimeter: int
+    area: int
+    index: int
+    yaw: float
+    distance: float
+    accuracy: float
+
+
+class PyCoralPosePipeReturnData(typing.TypedDict):
+    """
+    Dict return type for PyCoralPosePipeline
+    """
+    best: typing.Union[PyCoralObjectReturn, dict[None]]
+    objects: list[PyCoralObjectReturn]
+
+
+class PyCoralPosePipeline(NullPipeline):
+    """
+    Pipeline for detecting pose of note via pycoral tpu runtime
+    """
+    def __init__(self, app_storage: data_storage.ApplicationStorageProvider, pipe_id: str = "PyCoralPoser") -> None:
+        super(PyCoralPosePipeline, self).__init__()
+        self.default_data = \
+        {
+            "model": "edgetpu.tflite",
+            "labels": "labels.txt",
+            "min_object_area": 1000,
+            "min_threshold": 0.5,
+            "note_width": 14
+        }
+
+        self.visual = None
+        self.id = pipe_id
+        self.storage = data_storage.PipeStorageProvider(pipe_id, self.default_data)
+
+        self.fx = app_storage.data["camera_calib"]["fx"]
+        self.fy = app_storage.data["camera_calib"]["fy"]
+        self.cx = app_storage.data["camera_calib"]["cx"]
+        self.cy = app_storage.data["camera_calib"]["cy"]
+        self.dist_coeffs = np.array(app_storage.data["camera_calib"]["dist_coeff"])
+
+        self.labels = read_label_file(self.storage.data["labels"])
+        self.interpreter = make_interpreter(self.storage.data["model"])
+        self.interpreter.allocate_tensors()
+
+    def run(self, in_frame: cv2.typing.MatLike) -> typing.Tuple[bool, cv2.typing.MatLike, PyCoralPipeReturnData]:
+        """Pipeline
+
+        Args:
+            in_frame (cv2.typing.MatLike): Input from camera
+
+        Returns:
+            bool: Success
+            cv2.typing.MatLike: Input from camera
+            dict: Pos Data
+        """
+        self.visual = in_frame.copy()
+
+        data: PyCoralPipeReturnData = {"objects": [], "best": {}}
+
+        image = Image.fromarray(cv2.cvtColor(in_frame, cv2.COLOR_BGR2RGB))
+        _, scale = common.set_resized_input(
+            self.interpreter, image.size, lambda size: image.resize(size, Image.LANCZOS))
+
+        start = time.perf_counter()
+        self.interpreter.invoke()
+        inference_time = time.perf_counter() - start
+        objs = detect.get_objects(self.interpreter, self.storage.data["min_threshold"], scale)
+
+
+        filtered_contours: list[PyCObject] = []
+        for obj in objs:
+            if obj.bbox.area > self.storage.data["min_object_area"]:
+                filtered_contours.append(obj)
+
+        for idx, obj in enumerate(filtered_contours):
+            p = (2 * obj.bbox.width) + (2 * obj.bbox.height)
+            a = obj.bbox.area
+
+            # https://en.wikipedia.org/wiki/Shape_factor_(image_analysis_and_microscopy)#Circularity
+
+            x, y, w, h = [obj.bbox.xmin, obj.bbox.ymin, obj.bbox.width, obj.bbox.height]
+            c = (x + w // 2, y + h // 2)
+            d = (self.storage.data["note_width"] * self.fx) / obj.bbox.width
+            angle = angle3pt(c, (in_frame.shape[1] // 2, in_frame.shape[0]),
+                             (in_frame.shape[1] // 2, in_frame.shape[0] - 1))
+
+            cv2.putText(self.visual, f"T{idx}; {d:.2f}", (x, y - 5),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+            cv2.rectangle(self.visual, (x, y), (x + w, y + h), (0, 0, 255), 2)
+            cv2.drawMarker(self.visual, c, (0, 255, 0))
+
+            data["objects"].append({"bounding_box": (x, y, w, h),
+                                    "center": c, "perimeter": p,
+                                    "area": a, "index": idx, "yaw": angle,
+                                    "accuracy": obj.score})
+
+        cv2.putText(self.visual, f"{1 / (inference_time * 1000) * 1000:.1f} FPS",
+                    (35, 35), cv2.FONT_HERSHEY_SIMPLEX, 1.25, (0, 255, 0))
+
+        data["best"] = max(data["objects"], key=lambda x: x["area"], default=None)
+
+        return True, in_frame, data
+
+    def get_debug_mats(self) -> typing.Tuple[cv2.typing.MatLike]:
+        """
+        Return OpenCV Images for debugging
+        """
+        return self.visual

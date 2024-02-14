@@ -28,7 +28,7 @@ with open(label_path, 'r') as f:
 # Function to calculate distance based on object size
 def calculate_distance(inner_diameter_pixels):
     # Assuming inner diameter of the note is 10 inches
-    distance = (10.0 * fx) / inner_diameter_pixels
+    distance = (14.0 * fx) / inner_diameter_pixels
     return distance
 
 # Open webcam
