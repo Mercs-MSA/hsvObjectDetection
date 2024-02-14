@@ -77,8 +77,9 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
             _, frame, data = pipeline.run(frame)
             visual = pipeline.get_debug_mats()
 
-            nt.putString("note_pipeline", json.dumps(data))
+            #nt.putString("note_pipeline", json.dumps(data))
             nt.putNumber("note_yaw", data["best"]["yaw"] if data["best"] else 999)
+            nt.putNumber("note_dist", data["best"]["distance"] if data["best"] else 999)
 
             nt.putBoolean("vision_ok", True)
 

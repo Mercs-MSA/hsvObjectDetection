@@ -257,8 +257,8 @@ class PyCoralPosePipeReturnData(typing.TypedDict):
     """
     Dict return type for PyCoralPosePipeline
     """
-    best: typing.Union[PyCoralObjectReturn, dict[None]]
-    objects: list[PyCoralObjectReturn]
+    best: typing.Union[PyCoralPoseObjectReturn, dict[None]]
+    objects: list[PyCoralPoseObjectReturn]
 
 
 class PyCoralPosePipeline(NullPipeline):
@@ -290,7 +290,7 @@ class PyCoralPosePipeline(NullPipeline):
         self.interpreter = make_interpreter(self.storage.data["model"])
         self.interpreter.allocate_tensors()
 
-    def run(self, in_frame: cv2.typing.MatLike) -> typing.Tuple[bool, cv2.typing.MatLike, PyCoralPipeReturnData]:
+    def run(self, in_frame: cv2.typing.MatLike) -> typing.Tuple[bool, cv2.typing.MatLike, PyCoralPosePipeReturnData]:
         """Pipeline
 
         Args:
@@ -303,7 +303,7 @@ class PyCoralPosePipeline(NullPipeline):
         """
         self.visual = in_frame.copy()
 
-        data: PyCoralPipeReturnData = {"objects": [], "best": {}}
+        data: PyCoralPosePipeReturnData = {"objects": [], "best": {}}
 
         image = Image.fromarray(cv2.cvtColor(in_frame, cv2.COLOR_BGR2RGB))
         _, scale = common.set_resized_input(
