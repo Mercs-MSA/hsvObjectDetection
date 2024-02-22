@@ -339,7 +339,8 @@ class PyCoralPosePipeline(NullPipeline):
 
             data["objects"].append({"bounding_box": (x, y, w, h),
                                     "center": c, "perimeter": p,
-                                    "area": a, "index": idx, "yaw": angle,
+                                    "area": a, "index": idx,
+                                    "yaw": angle, "distance": d,
                                     "accuracy": obj.score})
 
         cv2.putText(self.visual, f"{1 / (inference_time * 1000) * 1000:.1f} FPS",
