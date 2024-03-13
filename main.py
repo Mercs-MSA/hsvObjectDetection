@@ -63,6 +63,15 @@ def _loop(nt: ntcore.NetworkTable, storage: data_storage.ApplicationStorageProvi
                     logger.error("Could not start service %s. "
                                  "Another operation is running related to the service",
                                  action["data"]["service_name"])
+                    
+    if "demo" in storage.data:
+        demo = storage.data["demo"]
+    else:
+        demo = False
+
+    if demo:
+        cv2.namedWindow("Original with Rectangles", cv2.WINDOW_NORMAL)
+        cv2.setWindowProperty("Original with Rectangles", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
     last_frame_timestamp = time.time()
 

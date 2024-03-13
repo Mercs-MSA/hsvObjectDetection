@@ -1,5 +1,5 @@
 {
-    "camera_id": "/dev/video-back-port2",
+    "camera_id": "/dev/video0",
     "camera_resolution": [640, 480],
     "camera_exp": null,
     "camera_calib": {
@@ -11,12 +11,11 @@
     },
     "nt_version": 4,
     "nt_address": "10.63.69.2",
-    "require_root": true,
+    "require_root": false,
     "post_load_actions": [
-        {"type": "start_service", "data": {"service_name": "photonvision.service"}}
     ],
     "atexit_actions": [
-        {"type": "stop_service", "data": {"service_name": "photonvision.service"}}
     ],
-    "gui": false
+    "gui": true,
+    "demo": true
 }
